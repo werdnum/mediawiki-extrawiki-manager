@@ -1,0 +1,22 @@
+{
+  "name": "wiki-manager",
+  "version": "0.0.0",
+  "authors": [
+    "Andrew Garrett <agarrett@wikimedia.org>"
+  ],
+  "description": "Manages wikis set up on MediaWiki-Vagrant",
+  "main": "server.py",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.2",
+    "jquery": "~2.1.3"
+  }
+}

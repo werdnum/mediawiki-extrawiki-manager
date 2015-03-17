@@ -1,0 +1,6 @@
+venv
+env
+node_modules
+static/bower_components
+*.pyc
+config.py
