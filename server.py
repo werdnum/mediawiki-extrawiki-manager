@@ -22,6 +22,7 @@ app.secret_key = app.config.get('SECRET_KEY')
 oauth = MWOAuth(
     consumer_key=app.config.get('OAUTH_CONSUMER_TOKEN'),
     consumer_secret=app.config.get('OAUTH_CONSUMER_SECRET'),
+    default_return_to='main',
 )
 
 app.register_blueprint(oauth.bp)
@@ -100,7 +101,6 @@ def validate_wiki(wiki):
 
 
 def is_authorised():
-    return True
     return oauth.get_current_user() in app.config.get('AUTHORIZED_USERS')
 
 
