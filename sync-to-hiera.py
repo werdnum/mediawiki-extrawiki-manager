@@ -7,7 +7,7 @@ import subprocess
 import sys
 import yaml
 
-filename = '/Users/andrew/vagrant/puppet/hieradata/local.yaml'
+filename = '/vagrant/puppet/hieradata/local.yaml'
 data_key = 'local::extrawikis::wikis'
 
 if os.path.isfile(filename):
