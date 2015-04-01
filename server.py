@@ -5,7 +5,6 @@ from flask_redis import Redis
 from flask_mwoauth import MWOAuth
 from functools import wraps
 import re
-import shlex
 import subprocess
 
 app = Flask(__name__)
@@ -13,7 +12,7 @@ app.config.from_object('config')
 redis_store = Redis(app)
 redis_key = app.config['REDIS_KEY']
 if app.config.get('REPROVISION_CMD'):
-    reprovision_command = shlex.split(app.config['REPROVISION_CMD'])
+    reprovision_command = app.config['REPROVISION_CMD']
 else:
     reprovision_command = ['/bin/echo']
 
