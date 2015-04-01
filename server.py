@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.config.from_object('config')
 redis_store = Redis(app)
 redis_key = app.config['REDIS_KEY']
-if app.config.get('REPROVISION_COMMAND'):
-    reprovision_command = shlex.split(app.config['REPROVISION_COMMAND'])
+if app.config.get('REPROVISION_CMD'):
+    reprovision_command = shlex.split(app.config['REPROVISION_CMD'])
 else:
     reprovision_command = ['/bin/echo']
 
