@@ -2,4 +2,4 @@
 
 source venv/bin/activate
 
-python server.py
+venv/bin/gunicorn server:app -b '[::]:5000'
