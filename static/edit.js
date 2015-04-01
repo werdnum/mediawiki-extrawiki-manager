@@ -106,6 +106,8 @@ $(function() {
 	} );
 
 
-	$( 'ul.wikis li' ).each( setupDeleteButton );
+	if ( $( 'ul.wikis' ).data( 'authorised' ) !== undefined ) {
+		$( 'ul.wikis li' ).each( setupDeleteButton );
+	}
 });
 })(jQuery);

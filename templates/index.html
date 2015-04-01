@@ -26,6 +26,12 @@
     <div class="container">
     	<h1>Manage Wikis</h1>
 
+        {%- if not is_authorised -%}
+        <ul class="error">
+        You need to <a href="/login">log in</a> to make changes.
+        </ul>
+        {%- endif -%}
+
 		<h2>Currently configured wikis</h2>
 		<ul class="wikis" {% if is_authorised %}data-authorised{% endif %}>
 		{%- for wiki in extrawikis -%}
