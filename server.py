@@ -66,8 +66,7 @@ def change_wikis():
         delete_wikis = request.form['delete'].split('|')
         if len(delete_wikis):
             redis_store.srem(redis_key, *delete_wikis)
-    if len(reprovision_command):
-        subprocess.Popen(reprovision_command)
+    subprocess.Popen(reprovision_command)
     return jsonify(added=add_wikis, deleted=delete_wikis)
 
 
