@@ -22,7 +22,7 @@ if wikis_data['wikis']:
     data[data_key] = wikis_data['wikis']
 
 with open(filename, 'w') as f:
-    yaml.safe_dump(data, f)
+    yaml.safe_dump(data, f, encoding='utf-8', allow_unicode=True)
 
 print("Hiera configuration successfully updated.")
 print("Run vagrant provision to apply changes.")
