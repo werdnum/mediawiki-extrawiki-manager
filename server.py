@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, session
 from flask_redis import Redis
 from flask_mwoauth import MWOAuth
 from functools import wraps
@@ -81,6 +81,12 @@ def update():
     except subprocess.CalledProcessError as e:
         return jsonify(updated=False, error=str(e))
     return jsonify(updated=True, version=get_version())
+
+
+@app.before_request
+def clear_session_before_login():
+    if request.endpoint == 'login':
+        session.clear()
 
 
 def get_wikis():
