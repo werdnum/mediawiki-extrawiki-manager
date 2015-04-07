@@ -2,7 +2,7 @@
 
 from flask import Flask, jsonify, render_template, request, session
 from flask_redis import Redis
-from flask_mwoauth import MWOAuth
+from flask_oauthlib.client import OAuth
 from functools import wraps
 import re
 import subprocess
@@ -17,23 +17,6 @@ else:
     reprovision_command = ['/bin/echo']
 
 app.secret_key = app.config.get('SECRET_KEY')
-
-oauth = MWOAuth(
-    consumer_key=app.config.get('OAUTH_CONSUMER_TOKEN'),
-    consumer_secret=app.config.get('OAUTH_CONSUMER_SECRET'),
-    default_return_to='main',
-)
-
-app.register_blueprint(oauth.bp)
-
-
-def auth_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not is_authorised():
-            return jsonify(error="You are not authorized"), 403
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @app.route('/')
@@ -83,12 +66,6 @@ def update():
     return jsonify(updated=True, version=get_version())
 
 
-@app.before_request
-def clear_session_before_login():
-    if request.endpoint == 'login':
-        session.clear()
-
-
 def get_wikis():
     return [var for var in redis_store.smembers(redis_key)]
 
@@ -103,9 +80,56 @@ def get_version():
 def validate_wiki(wiki):
     return re.match('^[a-z][a-z0-9_-]{0,15}$', wiki)
 
+# Login
+oauth = OAuth(app)
+mw_base = app.config.get('MEDIAWIKI_BASE')
+mediawiki = oauth.remote_app(
+    'mediawiki.org',
+    consumer_key=app.config.get('OAUTH_CONSUMER_TOKEN'),
+    consumer_secret=app.config.get('OAUTH_CONSUMER_SECRET'),
+    request_token_params={
+        'title': 'Special:OAuth/initiate',
+        'oauth_callback': 'oob'
+    },
+    access_token_url=mw_base+'/w/index.php?title=Special:OAuth/token',
+    authorize_url=mw_base+'/wiki/Special:OAuth/authorize',
+    request_token_url=mw_base+'/w/index.php',
+    base_url=mw_base+'/w/index.php',
+)
+
+
+@app.route('/login')
+def login():
+    return mediawiki.authorize(
+        callback=url_for('oauth-callback'),
+        _external=true
+    )
+
+
+@app.route('/oauth-callback')
+def oauth_callback():
+    resp = oauth.authorized_response()
+    if resp is not None:
+        session['authorized'] = True
+    return redirect(url_for('main'))
+
 
 def is_authorised():
-    return oauth.get_current_user() in app.config.get('AUTHORIZED_USERS')
+    return session['authorized']
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_authorised():
+            return jsonify(error="You are not authorized"), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@mediawiki.tokengetter
+def get_token():
+    return session.get('mediawiki_token')
 
 
 if __name__ == "__main__":
