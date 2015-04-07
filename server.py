@@ -4,8 +4,13 @@ from flask import Flask, jsonify, render_template, request, session, url_for, re
 from flask_redis import Redis
 from flask_oauthlib.client import OAuth
 from functools import wraps
+import json
+import jwt
 import re
 import subprocess
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -96,14 +101,12 @@ mediawiki = oauth.remote_app(
     'mediawiki.org',
     consumer_key=app.config.get('OAUTH_CONSUMER_TOKEN'),
     consumer_secret=app.config.get('OAUTH_CONSUMER_SECRET'),
-    request_token_params={
-#        'title': 'Special:OAuth/initiate',
-#        'oauth_callback': 'oob'
-    },
-    access_token_url=mw_base+'/w/index.php?title=Special%3AOAuth%2Ftoken',
-    authorize_url=mw_base+'/wiki/Special%3AOAuth%2Fauthorize',
-    request_token_url=mw_base+'/w/index.php?title=Special%3AOAuth%2Finitiate&oauth_callback=oob',
+    request_token_params={},
+    access_token_url=mw_base+'/wiki/Special:OAuth/token?title=Special%3AOAuth%2Ftoken',
+    authorize_url=mw_base+'/wiki/Special:OAuth/authorize?title=Special%3AOAuth%2Fauthorize',
+    request_token_url=mw_base+'/wiki/Special:OAuth/initiate?title=Special%3AOAuth%2Finitiate&oauth_callback=oob',
     base_url=mw_base+'/w/index.php',
+    content_type='text/plain'
 )
 
 
@@ -111,7 +114,6 @@ mediawiki = oauth.remote_app(
 def login():
     session.clear()
     return mediawiki.authorize(
-#        callback='oob',
         _external=True
     )
 
@@ -121,12 +123,16 @@ def oauth_callback():
     resp = mediawiki.authorized_response()
     if resp is not None:
         session['authorized'] = True
+        session['mediawiki_token'] = (resp['oauth_token'], resp['oauth_token_secret'])
     return redirect(url_for('main'))
 
 
 def is_authorised():
-    if not 'authorized' in session:
-        return false
+    if 'authorized' not in session:
+        return False
+    identity = mediawiki.get('/w/index.php?title=Special%3AOAuth%2Fidentify')
+    identity = jwt.decode(identity.raw_data, app.config.get('OAUTH_CONSUMER_SECRET'), audience=app.config.get('OAUTH_CONSUMER_TOKEN'))
+    return identity['username'] in app.config.get('AUTHORIZED_USERS')
 
 
 @mediawiki.tokengetter
