@@ -124,7 +124,7 @@ def oauth_callback():
 
 
 def is_authorised():
-    return session['authorized']
+    return 'authorized' in session
 
 
 @mediawiki.tokengetter
