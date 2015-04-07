@@ -19,6 +19,15 @@ else:
 app.secret_key = app.config.get('SECRET_KEY')
 
 
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_authorised():
+            return jsonify(error="You are not authorized"), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route('/')
 def main():
     wikis = get_wikis()
@@ -116,15 +125,6 @@ def oauth_callback():
 
 def is_authorised():
     return session['authorized']
-
-
-def auth_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not is_authorised():
-            return jsonify(error="You are not authorized"), 403
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @mediawiki.tokengetter
