@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from flask import Flask, jsonify, render_template, request, session
+from flask import Flask, jsonify, render_template, request, session, url_for, redirect
 from flask_redis import Redis
 from flask_oauthlib.client import OAuth
 from functools import wraps
@@ -97,34 +97,36 @@ mediawiki = oauth.remote_app(
     consumer_key=app.config.get('OAUTH_CONSUMER_TOKEN'),
     consumer_secret=app.config.get('OAUTH_CONSUMER_SECRET'),
     request_token_params={
-        'title': 'Special:OAuth/initiate',
-        'oauth_callback': 'oob'
+#        'title': 'Special:OAuth/initiate',
+#        'oauth_callback': 'oob'
     },
-    access_token_url=mw_base+'/w/index.php?title=Special:OAuth/token',
-    authorize_url=mw_base+'/wiki/Special:OAuth/authorize',
-    request_token_url=mw_base+'/w/index.php',
+    access_token_url=mw_base+'/w/index.php?title=Special%3AOAuth%2Ftoken',
+    authorize_url=mw_base+'/wiki/Special%3AOAuth%2Fauthorize',
+    request_token_url=mw_base+'/w/index.php?title=Special%3AOAuth%2Finitiate&oauth_callback=oob',
     base_url=mw_base+'/w/index.php',
 )
 
 
 @app.route('/login')
 def login():
+    session.clear()
     return mediawiki.authorize(
-        callback=url_for('oauth-callback'),
-        _external=true
+#        callback='oob',
+        _external=True
     )
 
 
 @app.route('/oauth-callback')
 def oauth_callback():
-    resp = oauth.authorized_response()
+    resp = mediawiki.authorized_response()
     if resp is not None:
         session['authorized'] = True
     return redirect(url_for('main'))
 
 
 def is_authorised():
-    return 'authorized' in session
+    if not 'authorized' in session:
+        return false
 
 
 @mediawiki.tokengetter
